@@ -1,7 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:simpleton_camera/camera2/model/camera_info.dart';
+import 'package:simpleton_camera/camera2/widget/camera_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +37,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const platform = MethodChannel("camera2_channel");
+
   void _incrementCounter() {
     var methodChannel = MethodChannel('icu.pyoc.camera');
     methodChannel.invokeMethod("getCameraInfo").then((result) {
@@ -44,31 +48,25 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void setFocusAuto() async {
+    Random random = Random();
+    await platform.invokeMethod(
+      "setFocusMode",
+      AfMode.values[random.nextInt(AfMode.values.length)],
+    ); // CONTROL_AF_MODE_CONTINUOUS_PICTURE
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Container(
-        width: 300,
-        height: 300,
-        decoration: BoxDecoration(border: Border.all()),
-        child: Center(
-          child: AndroidView(
-            viewType: "camera2TextureView",
-            layoutDirection: TextDirection.ltr,
-            creationParams: const <String, dynamic>{},
-            creationParamsCodec: const StandardMessageCodec(),
-          ),
-        ),
+      body: Stack(
+        children: [Align(alignment: Alignment.center, child: Camera2View())],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        onPressed: () {
+          setFocusAuto();
+        },
+      ),
     );
   }
 }
